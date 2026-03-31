@@ -247,6 +247,54 @@
           document.getElementById("webchat")
         );
 
+
+        // Inject CSS to reduce internal whitespace after render
+        setTimeout(() => {
+          const style = document.createElement('style');
+          style.textContent = `
+            .webchat__basic-transcript__filler {
+              display: none !important;
+              flex: 0 !important;
+              min-height: 0 !important;
+            }
+            .webchat__basic-transcript {
+              padding-top: 0 !important;
+            }
+            .webchat__basic-transcript__activity {
+              padding-top: 4px !important;
+              padding-bottom: 4px !important;
+            }
+
+            /* Bubble content spacing */
+            .webchat__bubble__content p {
+              margin-bottom: 10px !important;
+              line-height: 1.6 !important;
+            }
+            .webchat__bubble__content p:last-child {
+              margin-bottom: 0 !important;
+            }
+            .webchat__bubble__content ul,
+            .webchat__bubble__content ol {
+              padding-left: 16px !important;
+              margin: 8px 0 !important;
+            }
+            .webchat__bubble__content li {
+              margin-bottom: 10px !important;
+              line-height: 1.6 !important;
+            }
+            .webchat__bubble__content li:last-child {
+              margin-bottom: 0 !important;
+            }
+            .webchat__bubble__content a {
+              color: #6a8a28 !important;
+            }
+            .webchat__bubble__content a:hover {
+              color: #AAD04B !important;
+            }
+          `;
+          document.head.appendChild(style);
+        }, 500);
+
       } catch (err) {
         console.error("Vera failed to load:", err);
         document.getElementById("webchat").innerHTML =
