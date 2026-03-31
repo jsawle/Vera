@@ -29,7 +29,7 @@
 
     /* Soft green top stripe */
     .top-stripe {
-      background: #AAD04B;
+      background: #35AC46;
       height: 4px;
       width: 100%;
       flex-shrink: 0;
@@ -37,13 +37,13 @@
 
     /* Subtle header */
     .header {
-      background: #f0f3e8;
+      background: #f0f5f0;
       padding: 12px 18px;
       display: flex;
       align-items: flex-start;
       gap: 12px;
       flex-shrink: 0;
-      border-bottom: 1px solid #dce5c5;
+      border-bottom: 1px solid #6BC878;
     }
 
     /* Small leaf-dot accent */
@@ -51,7 +51,7 @@
       width: 8px;
       height: 8px;
       border-radius: 50%;
-      background: #AAD04B;
+      background: #35AC46;
       flex-shrink: 0;
       margin-top: 5px;
     }
@@ -69,7 +69,7 @@
     }
 
     .header-ask {
-      color: #8AA338;
+      color: #288835;
       font-family: 'Georgia', serif;
       font-size: 20px;
       font-style: italic;
@@ -77,7 +77,7 @@
     }
 
     .header-name {
-      color: #4a5a2a;
+      color: #288835;
       font-family: 'Georgia', serif;
       font-size: 20px;
       font-style: normal;
@@ -87,7 +87,7 @@
     }
 
     .header-tagline {
-      color: #7a8a5a;
+      color: #35AC46;
       font-family: 'Georgia', serif;
       font-size: 14px;
       font-style: normal;
@@ -136,12 +136,12 @@
 
     const styleOptions = {
       // Overall
-      "accent": "#AAD04B",
+      "accent": "#35AC46",
       "backgroundColor": "#f7f8f4",
 
       // Bot bubble — warm white
       "bubbleBackground": "#ffffff",
-      "bubbleBorderColor": "#dce5c5",
+      "bubbleBorderColor": "#6BC878",
       "bubbleBorderRadius": 8,
       "bubbleBorderStyle": "solid",
       "bubbleBorderWidth": 1,
@@ -150,41 +150,41 @@
       "bubbleMaxWidth": 520,
 
       // User bubble — soft mid green
-      "bubbleFromUserBackground": "#C2E075",
-      "bubbleFromUserBorderColor": "#AAD04B",
+      "bubbleFromUserBackground": "#35AC46",
+      "bubbleFromUserBorderColor": "#288835",
       "bubbleFromUserBorderRadius": 8,
       "bubbleFromUserBorderStyle": "solid",
       "bubbleFromUserBorderWidth": 1,
-      "bubbleFromUserTextColor": "#2a3a10",
+      "bubbleFromUserTextColor": "#ffffff",
       "bubbleFromUserNubSize": 0,
 
       // Bot avatar — muted green circle
-      "botAvatarBackgroundColor": "#AAD04B",
+      "botAvatarBackgroundColor": "#35AC46",
       "botAvatarInitials": "V",
       "showAvatarInGroup": "status",
       "avatarSize": 30,
       "avatarBorderRadius": "50%",
 
       // User avatar — hidden
-      "userAvatarBackgroundColor": "#C2E075",
+      "userAvatarBackgroundColor": "#35AC46",
       "userAvatarInitials": "",
 
       // Send box
-      "sendBoxBackground": "#f0f3e8",
-      "sendBoxBorderTop": "solid 1px #dce5c5",
-      "sendBoxButtonColor": "#6a8a28",
-      "sendBoxButtonColorOnHover": "#AAD04B",
+      "sendBoxBackground": "#f0f5f0",
+      "sendBoxBorderTop": "solid 1px #6BC878",
+      "sendBoxButtonColor": "#288835",
+      "sendBoxButtonColorOnHover": "#35AC46",
       "sendBoxHeight": 50,
       "sendBoxTextColor": "#2a2a2a",
-      "sendBoxPlaceholderColor": "#9aaa7a",
+      "sendBoxPlaceholderColor": "#6BC878",
 
       // Suggested action buttons
       "suggestedActionBackground": "#ffffff",
-      "suggestedActionBorderColor": "#AAD04B",
+      "suggestedActionBorderColor": "#35AC46",
       "suggestedActionBorderRadius": 20,
       "suggestedActionBorderWidth": 1,
-      "suggestedActionTextColor": "#4a6a18",
-      "suggestedActionBackgroundColorOnHover": "#E5F7B4",
+      "suggestedActionTextColor": "#288835",
+      "suggestedActionBackgroundColorOnHover": "#BDF2C4",
       "suggestedActionLayout": "flow",
 
       // Typography
@@ -196,7 +196,7 @@
       "paddingWide": 16,
 
       // Timestamps
-      "subtleColor": "#aabb88",
+      "subtleColor": "#6BC878",
     };
 
     async function initChat() {
@@ -286,10 +286,10 @@
               margin-bottom: 0 !important;
             }
             .webchat__bubble__content a {
-              color: #6a8a28 !important;
+              color: #288835 !important;
             }
             .webchat__bubble__content a:hover {
-              color: #AAD04B !important;
+              color: #35AC46 !important;
             }
           `;
           document.head.appendChild(style);
