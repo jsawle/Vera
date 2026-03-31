@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Vera — MapMaker AI Education Assistant</title>
+  <title>Vera — MapMaker Education Assistant</title>
   <script src="https://cdn.botframework.com/botframework-webchat/latest/webchat.js"></script>
   <style>
     *, *::before, *::after {
@@ -16,7 +16,7 @@
       width: 100%;
       height: 100%;
       overflow: hidden;
-      background: #111111;
+      background: #f7f8f4;
       font-family: 'Georgia', serif;
     }
 
@@ -27,55 +27,73 @@
       height: 100vh;
     }
 
-    /* NatGeo signature yellow stripe */
-    .natgeo-stripe {
-      background: #FFCC00;
-      height: 5px;
+    /* Soft green top stripe */
+    .top-stripe {
+      background: #AAD04B;
+      height: 4px;
       width: 100%;
       flex-shrink: 0;
     }
 
-    /* Header bar */
+    /* Subtle header */
     .header {
-      background: #111111;
-      padding: 12px 20px;
+      background: #f0f3e8;
+      padding: 12px 18px;
       display: flex;
-      align-items: center;
+      align-items: flex-start;
       gap: 12px;
       flex-shrink: 0;
-      border-bottom: 1px solid #2a2a2a;
+      border-bottom: 1px solid #dce5c5;
     }
 
-    .vera-badge {
-      background: #FFCC00;
-      color: #111111;
-      font-family: 'Arial Black', Arial, sans-serif;
-      font-weight: 900;
-      font-size: 11px;
-      letter-spacing: 2px;
-      text-transform: uppercase;
-      padding: 4px 8px;
+    /* Small leaf-dot accent */
+    .header-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #AAD04B;
       flex-shrink: 0;
+      margin-top: 5px;
     }
 
-    .header-divider {
-      width: 1px;
-      height: 20px;
-      background: #3a3a3a;
-      flex-shrink: 0;
+    .header-top-row {
+      display: flex;
+      align-items: baseline;
+      gap: 8px;
     }
 
-    .header-title {
-      color: #cccccc;
+    .header-text {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .header-ask {
+      color: #8AA338;
       font-family: 'Georgia', serif;
-      font-size: 13px;
-      font-weight: normal;
-      letter-spacing: 0.3px;
+      font-size: 20px;
+      font-style: italic;
+      font-weight: bold;
     }
 
-    .header-title em {
-      color: #FFCC00;
-      font-style: italic;
+    .header-name {
+      color: #4a5a2a;
+      font-family: 'Georgia', serif;
+      font-size: 20px;
+      font-style: normal;
+      font-weight: normal;
+      letter-spacing: 0.4px;
+      line-height: 1.5;
+    }
+
+    .header-tagline {
+      color: #7a8a5a;
+      font-family: 'Georgia', serif;
+      font-size: 14px;
+      font-style: normal;
+      font-weight: normal;
+      letter-spacing: 0.4px;
+      padding-left: 0;
     }
 
     /* WebChat container */
@@ -90,20 +108,25 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      color: #666;
+      color: #888;
       font-family: 'Georgia', serif;
-      font-size: 14px;
-      background: #f9f9f9;
+      font-size: 13px;
+      background: #f7f8f4;
     }
   </style>
 </head>
 <body>
   <div class="wrapper">
-    <div class="natgeo-stripe"></div>
+    <div class="top-stripe"></div>
     <div class="header">
-      <div class="vera-badge">Vera</div>
-      <div class="header-divider"></div>
-      <div class="header-title">MapMaker AI Education Assistant &mdash; <em>National Geographic</em></div>
+      <div class="header-dot"></div>
+      <div class="header-text">
+        <div class="header-top-row">
+          <div class="header-ask">Ask Vera</div>
+          <div class="header-name">&mdash; The National Geographic MapMaker AI Education Assistant</div>
+        </div>
+        <div class="header-tagline">Discover maps, layers and lessons with Vera.</div>
+      </div>
     </div>
     <div id="webchat" role="main"></div>
   </div>
@@ -112,54 +135,56 @@
     const tokenEndpoint = "https://68c61fd12475ebdd804374cf052e0d.0e.environment.api.powerplatform.com/powervirtualagents/botsbyschema/cr86a_Vera/directline/token?api-version=2022-03-01-preview";
 
     const styleOptions = {
-      "accent": "#FFCC00",
-      "backgroundColor": "#ffffff",
+      // Overall
+      "accent": "#AAD04B",
+      "backgroundColor": "#f7f8f4",
 
-      // Bot bubble
-      "bubbleBackground": "#f4f4f4",
-      "bubbleBorderColor": "#e8e8e8",
-      "bubbleBorderRadius": 6,
+      // Bot bubble — warm white
+      "bubbleBackground": "#ffffff",
+      "bubbleBorderColor": "#dce5c5",
+      "bubbleBorderRadius": 8,
       "bubbleBorderStyle": "solid",
       "bubbleBorderWidth": 1,
-      "bubbleTextColor": "#111111",
+      "bubbleTextColor": "#2a2a2a",
       "bubbleNubSize": 0,
+      "bubbleMaxWidth": 520,
 
-      // User bubble
-      "bubbleFromUserBackground": "#111111",
-      "bubbleFromUserBorderColor": "#111111",
-      "bubbleFromUserBorderRadius": 6,
+      // User bubble — soft mid green
+      "bubbleFromUserBackground": "#C2E075",
+      "bubbleFromUserBorderColor": "#AAD04B",
+      "bubbleFromUserBorderRadius": 8,
       "bubbleFromUserBorderStyle": "solid",
       "bubbleFromUserBorderWidth": 1,
-      "bubbleFromUserTextColor": "#ffffff",
+      "bubbleFromUserTextColor": "#2a3a10",
       "bubbleFromUserNubSize": 0,
 
-      // Bot avatar
-      "botAvatarBackgroundColor": "#FFCC00",
+      // Bot avatar — muted green circle
+      "botAvatarBackgroundColor": "#AAD04B",
       "botAvatarInitials": "V",
       "showAvatarInGroup": "status",
-      "avatarSize": 32,
-      "avatarBorderRadius": "4px",
+      "avatarSize": 30,
+      "avatarBorderRadius": "50%",
 
-      // User avatar
-      "userAvatarBackgroundColor": "#111111",
+      // User avatar — hidden
+      "userAvatarBackgroundColor": "#C2E075",
       "userAvatarInitials": "",
 
       // Send box
-      "sendBoxBackground": "#f4f4f4",
-      "sendBoxBorderTop": "solid 1px #e0e0e0",
-      "sendBoxButtonColor": "#111111",
-      "sendBoxButtonColorOnHover": "#FFCC00",
-      "sendBoxHeight": 52,
-      "sendBoxTextColor": "#111111",
-      "sendBoxPlaceholderColor": "#999999",
+      "sendBoxBackground": "#f0f3e8",
+      "sendBoxBorderTop": "solid 1px #dce5c5",
+      "sendBoxButtonColor": "#6a8a28",
+      "sendBoxButtonColorOnHover": "#AAD04B",
+      "sendBoxHeight": 50,
+      "sendBoxTextColor": "#2a2a2a",
+      "sendBoxPlaceholderColor": "#9aaa7a",
 
-      // Suggested actions
+      // Suggested action buttons
       "suggestedActionBackground": "#ffffff",
-      "suggestedActionBorderColor": "#111111",
-      "suggestedActionBorderRadius": 4,
+      "suggestedActionBorderColor": "#AAD04B",
+      "suggestedActionBorderRadius": 20,
       "suggestedActionBorderWidth": 1,
-      "suggestedActionTextColor": "#111111",
-      "suggestedActionBackgroundColorOnHover": "#FFCC00",
+      "suggestedActionTextColor": "#4a6a18",
+      "suggestedActionBackgroundColorOnHover": "#E5F7B4",
       "suggestedActionLayout": "flow",
 
       // Typography
@@ -171,7 +196,7 @@
       "paddingWide": 16,
 
       // Timestamps
-      "subtleColor": "#999999",
+      "subtleColor": "#aabb88",
     };
 
     async function initChat() {
@@ -225,7 +250,7 @@
       } catch (err) {
         console.error("Vera failed to load:", err);
         document.getElementById("webchat").innerHTML =
-          '<div class="loading">Unable to load Vera. Please refresh the page.</div>';
+          '<div class="loading">Unable to load. Please refresh the page.</div>';
       }
     }
 
