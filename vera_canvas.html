@@ -4,6 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Vera — MapMaker AI Education Assistant</title>
+  <script src="https://cdn.botframework.com/botframework-webchat/latest/webchat.js"></script>
   <style>
     *, *::before, *::after {
       box-sizing: border-box;
@@ -14,9 +15,9 @@
     html, body {
       width: 100%;
       height: 100%;
+      overflow: hidden;
       background: #111111;
       font-family: 'Georgia', serif;
-      overflow: hidden;
     }
 
     .wrapper {
@@ -26,32 +27,32 @@
       height: 100vh;
     }
 
-    /* NatGeo yellow top bar — signature brand stripe */
+    /* NatGeo signature yellow stripe */
     .natgeo-stripe {
       background: #FFCC00;
-      height: 6px;
+      height: 5px;
       width: 100%;
       flex-shrink: 0;
     }
 
-    /* Header */
+    /* Header bar */
     .header {
       background: #111111;
-      padding: 14px 24px;
+      padding: 12px 20px;
       display: flex;
       align-items: center;
-      gap: 14px;
+      gap: 12px;
       flex-shrink: 0;
       border-bottom: 1px solid #2a2a2a;
     }
 
-    .natgeo-badge {
+    .vera-badge {
       background: #FFCC00;
       color: #111111;
-      font-family: 'Arial Black', 'Arial Bold', Arial, sans-serif;
+      font-family: 'Arial Black', Arial, sans-serif;
       font-weight: 900;
       font-size: 11px;
-      letter-spacing: 1.5px;
+      letter-spacing: 2px;
       text-transform: uppercase;
       padding: 4px 8px;
       flex-shrink: 0;
@@ -59,33 +60,40 @@
 
     .header-divider {
       width: 1px;
-      height: 22px;
-      background: #444;
+      height: 20px;
+      background: #3a3a3a;
       flex-shrink: 0;
     }
 
     .header-title {
-      color: #ffffff;
+      color: #cccccc;
       font-family: 'Georgia', serif;
-      font-size: 14px;
+      font-size: 13px;
       font-weight: normal;
       letter-spacing: 0.3px;
-      opacity: 0.9;
     }
 
-    .header-title span {
+    .header-title em {
       color: #FFCC00;
       font-style: italic;
     }
 
-    /* Chat iframe — fills all remaining space */
-    .chat-frame {
+    /* WebChat container */
+    #webchat {
       flex: 1;
+      min-height: 0;
       width: 100%;
-      border: none;
-      display: block;
-      background: #ffffff;
-      min-height: 0; /* important for flex child to shrink correctly */
+    }
+
+    .loading {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #666;
+      font-family: 'Georgia', serif;
+      font-size: 14px;
+      background: #f9f9f9;
     }
   </style>
 </head>
@@ -93,16 +101,135 @@
   <div class="wrapper">
     <div class="natgeo-stripe"></div>
     <div class="header">
-      <div class="natgeo-badge">Vera</div>
+      <div class="vera-badge">Vera</div>
       <div class="header-divider"></div>
-      <div class="header-title">MapMaker AI Education Assistant &mdash; <span>Vera</span></div>
+      <div class="header-title">MapMaker AI Education Assistant &mdash; <em>National Geographic</em></div>
     </div>
-    <iframe
-      class="chat-frame"
-      src="https://copilotstudio.microsoft.com/environments/68c61fd1-2475-ebdd-8043-74cf052e0d0e/bots/cr86a_Vera/webchat?__version__=2"
-      allow="microphone"
-      title="Vera — MapMaker AI Education Assistant">
-    </iframe>
+    <div id="webchat" role="main"></div>
   </div>
+
+  <script>
+    const tokenEndpoint = "https://68c61fd12475ebdd804374cf052e0d.0e.environment.api.powerplatform.com/powervirtualagents/botsbyschema/cr86a_Vera/directline/token?api-version=2022-03-01-preview";
+
+    const styleOptions = {
+      "accent": "#FFCC00",
+      "backgroundColor": "#ffffff",
+
+      // Bot bubble
+      "bubbleBackground": "#f4f4f4",
+      "bubbleBorderColor": "#e8e8e8",
+      "bubbleBorderRadius": 6,
+      "bubbleBorderStyle": "solid",
+      "bubbleBorderWidth": 1,
+      "bubbleTextColor": "#111111",
+      "bubbleNubSize": 0,
+
+      // User bubble
+      "bubbleFromUserBackground": "#111111",
+      "bubbleFromUserBorderColor": "#111111",
+      "bubbleFromUserBorderRadius": 6,
+      "bubbleFromUserBorderStyle": "solid",
+      "bubbleFromUserBorderWidth": 1,
+      "bubbleFromUserTextColor": "#ffffff",
+      "bubbleFromUserNubSize": 0,
+
+      // Bot avatar
+      "botAvatarBackgroundColor": "#FFCC00",
+      "botAvatarInitials": "V",
+      "showAvatarInGroup": "status",
+      "avatarSize": 32,
+      "avatarBorderRadius": "4px",
+
+      // User avatar
+      "userAvatarBackgroundColor": "#111111",
+      "userAvatarInitials": "",
+
+      // Send box
+      "sendBoxBackground": "#f4f4f4",
+      "sendBoxBorderTop": "solid 1px #e0e0e0",
+      "sendBoxButtonColor": "#111111",
+      "sendBoxButtonColorOnHover": "#FFCC00",
+      "sendBoxHeight": 52,
+      "sendBoxTextColor": "#111111",
+      "sendBoxPlaceholderColor": "#999999",
+
+      // Suggested actions
+      "suggestedActionBackground": "#ffffff",
+      "suggestedActionBorderColor": "#111111",
+      "suggestedActionBorderRadius": 4,
+      "suggestedActionBorderWidth": 1,
+      "suggestedActionTextColor": "#111111",
+      "suggestedActionBackgroundColorOnHover": "#FFCC00",
+      "suggestedActionLayout": "flow",
+
+      // Typography
+      "primaryFont": "Georgia, serif",
+      "monospaceFont": "Consolas, monospace",
+
+      // Spacing
+      "paddingRegular": 12,
+      "paddingWide": 16,
+
+      // Timestamps
+      "subtleColor": "#999999",
+    };
+
+    async function initChat() {
+      try {
+        const environmentEndPoint = tokenEndpoint.slice(0, tokenEndpoint.indexOf("/powervirtualagents"));
+        const apiVersion = tokenEndpoint.slice(tokenEndpoint.indexOf("api-version")).split("=")[1];
+        const regionalChannelSettingsURL = `${environmentEndPoint}/powervirtualagents/regionalchannelsettings?api-version=${apiVersion}`;
+
+        const [regionalResponse, tokenResponse] = await Promise.all([
+          fetch(regionalChannelSettingsURL),
+          fetch(tokenEndpoint)
+        ]);
+
+        const regionalData = await regionalResponse.json();
+        const tokenData = await tokenResponse.json();
+        const directLineURL = regionalData.channelUrlsById.directline;
+
+        const store = window.WebChat.createStore(
+          {},
+          ({ dispatch }) => next => action => {
+            if (action.type === "DIRECT_LINE/CONNECT_FULFILLED") {
+              dispatch({
+                type: "DIRECT_LINE/POST_ACTIVITY",
+                meta: { method: "keyboard" },
+                payload: {
+                  activity: {
+                    channelData: { postBack: true },
+                    name: "startConversation",
+                    type: "event"
+                  }
+                }
+              });
+            }
+            return next(action);
+          }
+        );
+
+        window.WebChat.renderWebChat(
+          {
+            directLine: window.WebChat.createDirectLine({
+              domain: `${directLineURL}v3/directline`,
+              token: tokenData.token,
+            }),
+            styleOptions,
+            store,
+            locale: "en-US",
+          },
+          document.getElementById("webchat")
+        );
+
+      } catch (err) {
+        console.error("Vera failed to load:", err);
+        document.getElementById("webchat").innerHTML =
+          '<div class="loading">Unable to load Vera. Please refresh the page.</div>';
+      }
+    }
+
+    initChat();
+  </script>
 </body>
 </html>
