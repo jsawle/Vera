@@ -247,27 +247,6 @@
           document.getElementById("webchat")
         );
 
-
-        // Inject CSS to reduce internal whitespace after render
-        setTimeout(() => {
-          const style = document.createElement('style');
-          style.textContent = `
-            .webchat__basic-transcript__filler {
-              display: none !important;
-              flex: 0 !important;
-              min-height: 0 !important;
-            }
-            .webchat__basic-transcript {
-              padding-top: 0 !important;
-            }
-            .webchat__basic-transcript__activity {
-              padding-top: 4px !important;
-              padding-bottom: 4px !important;
-            }
-          `;
-          document.head.appendChild(style);
-        }, 500);
-
       } catch (err) {
         console.error("Vera failed to load:", err);
         document.getElementById("webchat").innerHTML =
