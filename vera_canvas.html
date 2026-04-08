@@ -303,11 +303,21 @@
             }
 
             /* Constrain stacked buttons to content width */
-            .webchat__suggested-actions__stacked {
+            .webchat__suggested-actions__stacked,
+            .webchat__suggested-actions {
               align-items: flex-start !important;
               padding: 0 12px !important;
             }
-            .webchat__suggested-actions__stacked button {
+            .webchat__suggested-actions__stacked button,
+            .webchat__suggested-actions button {
+              width: auto !important;
+              min-width: 0 !important;
+            }
+            .webchat__suggested-actions__item-box {
+              width: auto !important;
+              flex: 0 0 auto !important;
+            }
+            .webchat__suggested-action {
               width: auto !important;
             }
           `;
