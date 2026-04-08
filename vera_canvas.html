@@ -25,6 +25,10 @@
       flex-direction: column;
       width: 100%;
       height: 100vh;
+      border: 1px solid #6BC878;
+      border-radius: 6px;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.12);
+      overflow: hidden;
     }
 
     /* Soft green top stripe */
@@ -186,6 +190,7 @@
       "suggestedActionTextColor": "#288835",
       "suggestedActionBackgroundColorOnHover": "#BDF2C4",
       "suggestedActionLayout": "stacked",
+      "suggestedActionsStackedLayoutButtonTextWrap": true,
 
       // Typography
       "primaryFont": "Georgia, serif",
@@ -295,6 +300,15 @@
             /* Hide file upload/attachment button */
             .webchat__upload-button {
               display: none !important;
+            }
+
+            /* Constrain stacked buttons to content width */
+            .webchat__suggested-actions__stacked {
+              align-items: flex-start !important;
+              padding: 0 12px !important;
+            }
+            .webchat__suggested-actions__stacked button {
+              width: auto !important;
             }
           `;
           document.head.appendChild(style);
