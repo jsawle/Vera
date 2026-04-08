@@ -320,6 +320,21 @@
             .webchat__suggested-action {
               width: auto !important;
             }
+            /* Override SDK scoped styles forcing full width */
+            .webchat__suggested-actions__stack {
+              display: flex !important;
+              flex-direction: column !important;
+              align-items: flex-start !important;
+            }
+            .webchat__suggested-actions__stack .webchat__suggested-actions__item-box {
+              width: auto !important;
+              max-width: 100% !important;
+              flex: 0 0 auto !important;
+            }
+            .webchat__suggested-actions__stack button {
+              width: auto !important;
+              max-width: none !important;
+            }
           `;
           document.head.appendChild(style);
         }, 500);
