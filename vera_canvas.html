@@ -156,11 +156,11 @@
       }
 
       #vera-print-content {
-        position: fixed;
-        top: 0;
-        left: 0;
+        position: static;
+        top: auto;
+        left: auto;
         width: 100%;
-        padding: 40px;
+        padding: 0;
         font-family: Georgia, serif;
         font-size: 13pt;
         line-height: 1.7;
@@ -330,12 +330,12 @@
     function collectLessonContent() {
       // Only collect bot bubbles that contain substantive lesson content.
       // We skip short conversational messages (greetings, prompts, confirmations)
-      // by filtering to bubbles whose text content exceeds 200 characters.
+      // by filtering to bubbles whose text content exceeds 400 characters.
       const bubbles = document.querySelectorAll('.webchat__bubble:not(.webchat__bubble--from-user) .webchat__bubble__content');
       let html = '';
       bubbles.forEach(bubble => {
         const text = bubble.innerText || bubble.textContent || '';
-        if (text.trim().length > 200) {
+        if (text.trim().length > 400) {
           html += bubble.innerHTML + '<hr style="border:none;border-top:1px solid #ddd;margin:16px 0;">';
         }
       });
