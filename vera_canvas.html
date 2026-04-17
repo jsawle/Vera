@@ -226,6 +226,7 @@
 
       @page {
         margin: 2cm;
+        size: A4;
       }
     }
   </style>
@@ -327,13 +328,18 @@
     // ── PDF helpers ────────────────────────────────────────────────────────────
 
     function collectLessonContent() {
-      // Gather all bot bubble text from the transcript to use as print content
+      // Only collect bot bubbles that contain substantive lesson content.
+      // We skip short conversational messages (greetings, prompts, confirmations)
+      // by filtering to bubbles whose text content exceeds 200 characters.
       const bubbles = document.querySelectorAll('.webchat__bubble:not(.webchat__bubble--from-user) .webchat__bubble__content');
       let html = '';
       bubbles.forEach(bubble => {
-        html += bubble.innerHTML + '<hr style="border:none;border-top:1px solid #ddd;margin:16px 0;">';
+        const text = bubble.innerText || bubble.textContent || '';
+        if (text.trim().length > 200) {
+          html += bubble.innerHTML + '<hr style="border:none;border-top:1px solid #ddd;margin:16px 0;">';
+        }
       });
-      return html;
+      return html || '<p>No lesson content found.</p>';
     }
 
     function triggerPDF() {
