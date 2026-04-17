@@ -375,23 +375,20 @@
       }
     }
 
-    // ── MutationObserver — watch for new bot messages ─────────────────────────
+    // ── Poll for PDF token every second ───────────────────────────────────────
 
     function watchForPDFToken() {
-      const transcript = document.getElementById('webchat');
-      if (!transcript) return;
-
-      const observer = new MutationObserver(() => {
-        const bubbles = transcript.querySelectorAll('.webchat__bubble:not(.webchat__bubble--from-user) .webchat__bubble__content');
+      setInterval(() => {
+        const bubbles = document.querySelectorAll(
+          '.webchat__bubble:not(.webchat__bubble--from-user) .webchat__bubble__content'
+        );
         bubbles.forEach(bubble => {
           if (bubble.innerHTML.includes('[SAVE_AS_PDF]') && !bubble.dataset.pdfInjected) {
             bubble.dataset.pdfInjected = 'true';
             injectPDFButton(bubble);
           }
         });
-      });
-
-      observer.observe(transcript, { childList: true, subtree: true });
+      }, 1000);
     }
 
     // ── Main init ──────────────────────────────────────────────────────────────
