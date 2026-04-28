@@ -261,6 +261,31 @@
   <script>
     const tokenEndpoint = "https://68c61fd12475ebdd804374cf052e0d.0e.environment.api.powerplatform.com/powervirtualagents/botsbyschema/cr86a_Vera/directline/token?api-version=2022-03-01-preview";
 
+    // ── Lesson-plan acknowledgement detection ──────────────────────────────────
+    // When a teacher asks Vera for a lesson, the response can take up to ~60s
+    // to generate. To reassure the user that Vera is working, we inject a
+    // local Vera-styled bubble immediately after the user's message if it
+    // looks like a lesson-plan request.
+    //
+    // The detector is intentionally permissive — a missed match just means no
+    // ack (Vera still works fine), so erring on the side of more matches is
+    // safe. It triggers when "lesson" appears as a whole word AND either an
+    // action verb is present OR the message is short enough to plausibly be
+    // a lesson request fragment.
+
+    const LESSON_KEYWORDS = /\blesson(s|\splan(s)?)?\b/i;
+    const ACTION_VERBS = /\b(create|build|make|design|write|draft|generate|put\s+together|prepare|develop|need|want|give\s+me|help\s+me\s+with|i'?d?\s+like|can\s+you)\b/i;
+
+    function looksLikeLessonRequest(text) {
+      if (!text || typeof text !== 'string') return false;
+      if (!LESSON_KEYWORDS.test(text)) return false;
+      return ACTION_VERBS.test(text) || text.trim().split(/\s+/).length <= 12;
+    }
+
+    const ACK_MESSAGE =
+      "Building your lesson plan now — this can take up to 60 seconds for " +
+      "detailed plans. 📖";
+
     const styleOptions = {
       // Overall
       "accent": "#35AC46",
@@ -419,6 +444,7 @@
         const store = window.WebChat.createStore(
           {},
           ({ dispatch }) => next => action => {
+            // 1. On connection, kick off the conversation with a startConversation event.
             if (action.type === "DIRECT_LINE/CONNECT_FULFILLED") {
               dispatch({
                 type: "DIRECT_LINE/POST_ACTIVITY",
@@ -432,6 +458,33 @@
                 }
               });
             }
+
+            // 2. Watch for outgoing user messages that look like lesson requests.
+            //    If matched, schedule a Vera-styled acknowledgement bubble to
+            //    appear right after the user's message in the transcript.
+            if (
+              action.type === "DIRECT_LINE/POST_ACTIVITY" &&
+              action.payload &&
+              action.payload.activity &&
+              action.payload.activity.type === "message" &&
+              looksLikeLessonRequest(action.payload.activity.text)
+            ) {
+              setTimeout(() => {
+                dispatch({
+                  type: "DIRECT_LINE/INCOMING_ACTIVITY",
+                  payload: {
+                    activity: {
+                      type: "message",
+                      from: { id: "vera-ack", name: "Vera", role: "bot" },
+                      text: ACK_MESSAGE,
+                      timestamp: new Date().toISOString(),
+                      channelData: { veraAck: true }
+                    }
+                  }
+                });
+              }, 50);
+            }
+
             return next(action);
           }
         );
