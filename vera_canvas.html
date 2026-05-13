@@ -4,7 +4,10 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Vera — MapMaker Education Assistant</title>
-  <script src="https://cdn.botframework.com/botframework-webchat/latest/webchat.js"></script>
+  <!-- WebChat pinned to a specific version for stability -->
+  <script src="https://cdn.botframework.com/botframework-webchat/4.18.0/webchat.js"></script>
+  <!-- html-docx-js for "Open in Word" -->
+  <script src="https://cdn.jsdelivr.net/npm/html-docx-js@0.3.1/dist/html-docx.js"></script>
   <style>
     *, *::before, *::after {
       box-sizing: border-box;
@@ -50,7 +53,6 @@
       border-bottom: 1px solid #6BC878;
     }
 
-    /* Small leaf-dot accent */
     .header-dot {
       width: 8px;
       height: 8px;
@@ -100,7 +102,6 @@
       padding-left: 0;
     }
 
-    /* WebChat container */
     #webchat {
       flex: 1;
       min-height: 0;
@@ -118,118 +119,118 @@
       background: #f7f8f4;
     }
 
-    /* PDF Save button — injected inline by JS */
-    .vera-pdf-btn {
+    /* Save buttons — Pattern A: appear inline below each substantive bubble */
+    .vera-save-bar {
+      display: flex;
+      gap: 8px;
+      margin-top: 12px;
+    }
+
+    .vera-save-btn {
       display: inline-flex;
       align-items: center;
-      gap: 7px;
-      margin-top: 12px;
-      padding: 9px 18px;
+      gap: 6px;
+      padding: 6px 14px;
+      background: transparent;
+      color: #288835;
+      border: 1px solid #35AC46;
+      border-radius: 16px;
+      font-family: 'Georgia', serif;
+      font-size: 13px;
+      cursor: pointer;
+      transition: background 0.18s ease, color 0.18s ease;
+    }
+
+    .vera-save-btn:hover {
       background: #35AC46;
       color: #ffffff;
-      border: none;
-      border-radius: 20px;
-      font-family: 'Georgia', serif;
-      font-size: 14px;
-      cursor: pointer;
-      text-decoration: none;
-      transition: background 0.2s ease;
     }
-    .vera-pdf-btn:hover {
-      background: #288835;
-    }
-    .vera-pdf-btn svg {
+
+    .vera-save-btn svg {
       flex-shrink: 0;
     }
 
-    /* ── Print stylesheet ───────────────────────────────────────────────────── */
-    @media print {
-      /* Hide everything by default */
-      body * {
-        visibility: hidden;
-      }
+    .vera-save-btn.is-copied {
+      background: #35AC46;
+      color: #ffffff;
+    }
 
-      /* Show only the lesson plan content area */
-      #vera-print-content,
-      #vera-print-content * {
-        visibility: visible;
-      }
+    /* WebChat content overrides — injected here rather than via setTimeout
+       to avoid flash of unstyled content */
+    .webchat__basic-transcript__filler {
+      display: none !important;
+      flex: 0 !important;
+      min-height: 0 !important;
+    }
+    .webchat__basic-transcript {
+      padding-top: 0 !important;
+    }
+    .webchat__basic-transcript__activity {
+      padding-top: 4px !important;
+      padding-bottom: 4px !important;
+    }
+    .webchat__bubble__content p {
+      margin-bottom: 10px !important;
+      line-height: 1.6 !important;
+    }
+    .webchat__bubble__content p:last-child {
+      margin-bottom: 0 !important;
+    }
+    .webchat__bubble__content ul,
+    .webchat__bubble__content ol {
+      padding-left: 16px !important;
+      margin: 8px 0 !important;
+    }
+    .webchat__bubble__content li {
+      margin-bottom: 10px !important;
+      line-height: 1.6 !important;
+    }
+    .webchat__bubble__content li:last-child {
+      margin-bottom: 0 !important;
+    }
+    .webchat__bubble__content a {
+      color: #288835 !important;
+    }
+    .webchat__bubble__content a:hover {
+      color: #35AC46 !important;
+    }
 
-      #vera-print-content {
-        position: absolute;
-        top: 0;
-        left: 0;
-        width: 100%;
-        padding: 40px;
-        font-family: Georgia, serif;
-        font-size: 13pt;
-        line-height: 1.7;
-        color: #1a1a1a;
-        background: white;
-        height: auto;
-        overflow: visible;
-      }
+    /* Hide file upload/attachment button */
+    .webchat__upload-button {
+      display: none !important;
+    }
 
-      /* NatGeo-style header stripe */
-      #vera-print-content::before {
-        content: '';
-        display: block;
-        height: 6px;
-        background: #35AC46;
-        margin-bottom: 24px;
-      }
-
-      #vera-print-header {
-        margin-bottom: 28px;
-        padding-bottom: 16px;
-        border-bottom: 1px solid #ccc;
-      }
-
-      #vera-print-header h1 {
-        font-size: 22pt;
-        color: #288835;
-        font-style: italic;
-        margin-bottom: 4px;
-      }
-
-      #vera-print-header p {
-        font-size: 10pt;
-        color: #666;
-      }
-
-      #vera-print-body {
-        white-space: pre-wrap;
-        word-wrap: break-word;
-      }
-
-      #vera-print-body h2, #vera-print-body h3 {
-        color: #288835;
-        margin-top: 20px;
-        margin-bottom: 8px;
-      }
-
-      #vera-print-body a {
-        color: #288835;
-      }
-
-      #vera-print-body ul, #vera-print-body ol {
-        padding-left: 20px;
-        margin: 8px 0;
-      }
-
-      #vera-print-body li {
-        margin-bottom: 6px;
-      }
-
-      /* Hide the PDF button itself when printing */
-      .vera-pdf-btn {
-        display: none !important;
-      }
-
-      @page {
-        margin: 2cm;
-        size: A4;
-      }
+    /* Constrain stacked suggested-action buttons to content width */
+    .webchat__suggested-actions__stacked,
+    .webchat__suggested-actions {
+      align-items: flex-start !important;
+      padding: 0 12px !important;
+    }
+    .webchat__suggested-actions__stacked button,
+    .webchat__suggested-actions button {
+      width: auto !important;
+      min-width: 0 !important;
+    }
+    .webchat__suggested-actions__item-box {
+      width: auto !important;
+      flex: 0 0 auto !important;
+    }
+    .webchat__suggested-action {
+      width: auto !important;
+    }
+    .webchat__suggested-actions__stack {
+      display: flex !important;
+      flex-direction: column !important;
+      align-items: flex-start !important;
+    }
+    .webchat__suggested-actions__stack .webchat__suggested-actions__item-box {
+      width: auto !important;
+      max-width: 100% !important;
+      flex: 0 0 auto !important;
+    }
+    .webchat__suggested-actions__stack button {
+      width: auto !important;
+      max-width: none !important;
     }
   </style>
 </head>
@@ -249,49 +250,17 @@
     <div id="webchat" role="main"></div>
   </div>
 
-  <!-- Hidden print container — populated by JS when lesson plan is ready -->
-  <div id="vera-print-content" style="display:none;">
-    <div id="vera-print-header">
-      <h1>Ask Vera — Lesson Plan</h1>
-      <p id="vera-print-date"></p>
-    </div>
-    <div id="vera-print-body"></div>
-  </div>
-
   <script>
     const tokenEndpoint = "https://68c61fd12475ebdd804374cf052e0d.0e.environment.api.powerplatform.com/powervirtualagents/botsbyschema/cr86a_Vera/directline/token?api-version=2022-03-01-preview";
 
-    // ── Lesson-plan acknowledgement detection ──────────────────────────────────
-    // When a teacher asks Vera for a lesson, the response can take up to ~60s
-    // to generate. To reassure the user that Vera is working, we inject a
-    // local Vera-styled bubble immediately after the user's message if it
-    // looks like a lesson-plan request.
-    //
-    // The detector is intentionally permissive — a missed match just means no
-    // ack (Vera still works fine), so erring on the side of more matches is
-    // safe. It triggers when "lesson" appears as a whole word AND either an
-    // action verb is present OR the message is short enough to plausibly be
-    // a lesson request fragment.
-
-    const LESSON_KEYWORDS = /\blesson(s|\splan(s)?)?\b/i;
-    const ACTION_VERBS = /\b(create|build|make|design|write|draft|generate|put\s+together|prepare|develop|need|want|give\s+me|help\s+me\s+with|i'?d?\s+like|can\s+you)\b/i;
-
-    function looksLikeLessonRequest(text) {
-      if (!text || typeof text !== 'string') return false;
-      if (!LESSON_KEYWORDS.test(text)) return false;
-      return ACTION_VERBS.test(text) || text.trim().split(/\s+/).length <= 12;
-    }
-
-    const ACK_MESSAGE =
-      "Building your lesson plan now — this can take up to 60 seconds for " +
-      "detailed plans. 📖";
+    // Substantive content threshold. Bubbles with at least this many characters
+    // of text are considered "savable" — long enough to be a lesson plan,
+    // assessment, or other deliverable rather than a conversational reply.
+    const SAVE_THRESHOLD_CHARS = 500;
 
     const styleOptions = {
-      // Overall
       "accent": "#35AC46",
       "backgroundColor": "#f7f8f4",
-
-      // Bot bubble — warm white
       "bubbleBackground": "#ffffff",
       "bubbleBorderColor": "#6BC878",
       "bubbleBorderRadius": 8,
@@ -300,8 +269,6 @@
       "bubbleTextColor": "#2a2a2a",
       "bubbleNubSize": 0,
       "bubbleMaxWidth": 520,
-
-      // User bubble — soft mid green
       "bubbleFromUserBackground": "#35AC46",
       "bubbleFromUserBorderColor": "#288835",
       "bubbleFromUserBorderRadius": 8,
@@ -309,19 +276,13 @@
       "bubbleFromUserBorderWidth": 1,
       "bubbleFromUserTextColor": "#ffffff",
       "bubbleFromUserNubSize": 0,
-
-      // Bot avatar — muted green circle
       "botAvatarBackgroundColor": "#35AC46",
       "botAvatarInitials": "V",
       "showAvatarInGroup": "status",
       "avatarSize": 30,
       "avatarBorderRadius": "50%",
-
-      // User avatar — hidden
       "userAvatarBackgroundColor": "#35AC46",
       "userAvatarInitials": "",
-
-      // Send box
       "sendBoxBackground": "#f0f5f0",
       "sendBoxBorderTop": "solid 1px #6BC878",
       "sendBoxButtonColor": "#288835",
@@ -329,8 +290,6 @@
       "sendBoxHeight": 50,
       "sendBoxTextColor": "#2a2a2a",
       "sendBoxPlaceholderColor": "#6BC878",
-
-      // Suggested action buttons
       "suggestedActionBackground": "#ffffff",
       "suggestedActionBorderColor": "#35AC46",
       "suggestedActionBorderRadius": 20,
@@ -339,89 +298,202 @@
       "suggestedActionBackgroundColorOnHover": "#BDF2C4",
       "suggestedActionLayout": "stacked",
       "suggestedActionsStackedLayoutButtonTextWrap": true,
-
-      // Typography
       "primaryFont": "Georgia, serif",
       "monospaceFont": "Consolas, monospace",
-
-      // Spacing
       "paddingRegular": 12,
       "paddingWide": 16,
-
-      // Timestamps
       "subtleColor": "#6BC878",
     };
 
-    // ── PDF helpers ────────────────────────────────────────────────────────────
+    // ── Save helpers ───────────────────────────────────────────────────────────
 
-    function collectLessonContent() {
-      // Only collect bot bubbles that contain substantive lesson content.
-      // Conversational messages are all under 200 chars; content bubbles are 1000+.
-      // Threshold of 500 cleanly separates them.
-      const bubbles = document.querySelectorAll('.webchat__bubble:not(.webchat__bubble--from-user) .webchat__bubble__content');
-      let html = '';
-      bubbles.forEach(bubble => {
-        const text = bubble.innerText || bubble.textContent || '';
-        if (text.trim().length > 500) {
-          html += bubble.innerHTML + '<hr style="border:none;border-top:1px solid #ddd;margin:16px 0;">';
+    function copyIcon() {
+      return `
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+          <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+        </svg>
+      `;
+    }
+
+    function wordIcon() {
+      return `
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+          <polyline points="14 2 14 8 20 8"></polyline>
+          <line x1="16" y1="13" x2="8" y2="13"></line>
+          <line x1="16" y1="17" x2="8" y2="17"></line>
+        </svg>
+      `;
+    }
+
+    // Copy the bubble's content to the clipboard as rich HTML so pasting into
+    // Word, Google Docs, etc. preserves formatting. Plain text is included as
+    // a fallback for plain-text-only destinations.
+    async function copyBubbleHTML(bubbleContent, button) {
+      const html = bubbleContent.innerHTML;
+      const text = bubbleContent.innerText || bubbleContent.textContent || '';
+
+      try {
+        // Modern clipboard API supports rich HTML via ClipboardItem
+        if (navigator.clipboard && window.ClipboardItem) {
+          await navigator.clipboard.write([
+            new ClipboardItem({
+              'text/html': new Blob([html], { type: 'text/html' }),
+              'text/plain': new Blob([text], { type: 'text/plain' })
+            })
+          ]);
+        } else {
+          // Fallback: text-only copy via legacy API
+          await navigator.clipboard.writeText(text);
         }
-      });
-      return html || '<p>No lesson content found.</p>';
-    }
-
-    function triggerPDF() {
-      const printBody = document.getElementById('vera-print-body');
-      const printDate = document.getElementById('vera-print-date');
-      const printContent = document.getElementById('vera-print-content');
-
-      printBody.innerHTML = collectLessonContent();
-      printDate.textContent = 'Generated by Vera on ' + new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
-      printContent.style.display = 'block';
-
-      // Small delay to ensure DOM updates before print dialog opens
-      setTimeout(() => {
-        window.print();
-        setTimeout(() => { printContent.style.display = 'none'; }, 1000);
-      }, 200);
-    }
-
-    function injectPDFButton(bubbleContentEl) {
-      // Replace [SAVE_AS_PDF] token with the button
-      const html = bubbleContentEl.innerHTML;
-      if (html.includes('[SAVE_AS_PDF]')) {
-        const btn = document.createElement('button');
-        btn.className = 'vera-pdf-btn';
-        btn.innerHTML = `
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-            <polyline points="14 2 14 8 20 8"></polyline>
-            <line x1="12" y1="18" x2="12" y2="12"></line>
-            <line x1="9" y1="15" x2="15" y2="15"></line>
-          </svg>
-          Save as PDF
-        `;
-        btn.addEventListener('click', triggerPDF);
-
-        // Replace the token text with the button
-        bubbleContentEl.innerHTML = html.replace('[SAVE_AS_PDF]', '');
-        bubbleContentEl.appendChild(btn);
+        showCopiedFeedback(button);
+      } catch (err) {
+        console.error('Copy failed:', err);
+        // Last-resort fallback: text-only via deprecated execCommand
+        try {
+          const textarea = document.createElement('textarea');
+          textarea.value = text;
+          textarea.style.position = 'fixed';
+          textarea.style.opacity = '0';
+          document.body.appendChild(textarea);
+          textarea.select();
+          document.execCommand('copy');
+          document.body.removeChild(textarea);
+          showCopiedFeedback(button);
+        } catch (fallbackErr) {
+          console.error('Fallback copy also failed:', fallbackErr);
+        }
       }
     }
 
-    // ── Poll for PDF token every second ───────────────────────────────────────
+    function showCopiedFeedback(button) {
+      const originalHTML = button.innerHTML;
+      button.classList.add('is-copied');
+      button.innerHTML = `${copyIcon()} Copied`;
+      setTimeout(() => {
+        button.classList.remove('is-copied');
+        button.innerHTML = originalHTML;
+      }, 1600);
+    }
 
-    function watchForPDFToken() {
-      setInterval(() => {
-        const bubbles = document.querySelectorAll(
-          '.webchat__bubble:not(.webchat__bubble--from-user) .webchat__bubble__content'
-        );
-        bubbles.forEach(bubble => {
-          if (bubble.innerHTML.includes('[SAVE_AS_PDF]') && !bubble.dataset.pdfInjected) {
-            bubble.dataset.pdfInjected = 'true';
-            injectPDFButton(bubble);
+    // Generate and download a .docx of the bubble content using html-docx-js.
+    function downloadBubbleAsWord(bubbleContent) {
+      const bubbleHtml = bubbleContent.innerHTML;
+
+      // Wrap in a minimal HTML document with basic styling so Word renders it sensibly
+      const fullHtml = `
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <meta charset="UTF-8">
+          <style>
+            body { font-family: Georgia, serif; font-size: 12pt; line-height: 1.6; color: #1a1a1a; }
+            h1, h2, h3 { color: #288835; margin-top: 16pt; margin-bottom: 6pt; }
+            ul, ol { padding-left: 20pt; margin: 6pt 0; }
+            li { margin-bottom: 4pt; }
+            a { color: #288835; }
+            p { margin-bottom: 8pt; }
+          </style>
+        </head>
+        <body>${bubbleHtml}</body>
+        </html>
+      `;
+
+      try {
+        const converted = htmlDocx.asBlob(fullHtml);
+        const filename = `vera-output-${new Date().toISOString().slice(0, 10)}.docx`;
+
+        // Trigger download
+        const url = URL.createObjectURL(converted);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = filename;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+      } catch (err) {
+        console.error('Word export failed:', err);
+        alert('Sorry, the document could not be generated. Please try Copy instead.');
+      }
+    }
+
+    function buildSaveBar(bubbleContent) {
+      const bar = document.createElement('div');
+      bar.className = 'vera-save-bar';
+      bar.setAttribute('data-vera-save-bar', '');
+
+      const copyBtn = document.createElement('button');
+      copyBtn.type = 'button';
+      copyBtn.className = 'vera-save-btn';
+      copyBtn.innerHTML = `${copyIcon()} Copy`;
+      copyBtn.addEventListener('click', () => copyBubbleHTML(bubbleContent, copyBtn));
+
+      const wordBtn = document.createElement('button');
+      wordBtn.type = 'button';
+      wordBtn.className = 'vera-save-btn';
+      wordBtn.innerHTML = `${wordIcon()} Open in Word`;
+      wordBtn.addEventListener('click', () => downloadBubbleAsWord(bubbleContent));
+
+      bar.appendChild(copyBtn);
+      bar.appendChild(wordBtn);
+      return bar;
+    }
+
+    // Attach save bar to a bubble's content element if substantive and not already attached.
+    function maybeAttachSaveBar(bubbleContentEl) {
+      if (bubbleContentEl.dataset.veraSaveAttached) return;
+
+      const text = bubbleContentEl.innerText || bubbleContentEl.textContent || '';
+      if (text.trim().length < SAVE_THRESHOLD_CHARS) return;
+
+      bubbleContentEl.dataset.veraSaveAttached = 'true';
+      const bar = buildSaveBar(bubbleContentEl);
+      bubbleContentEl.appendChild(bar);
+    }
+
+    // Watch the transcript for new substantive bot bubbles and attach save bars.
+    // Uses MutationObserver — only fires when DOM changes, not on a polling loop.
+    function watchTranscript() {
+      const transcript = document.querySelector('.webchat__basic-transcript') || document.body;
+
+      // Initial sweep — handle any bubbles already in DOM
+      document.querySelectorAll(
+        '.webchat__bubble:not(.webchat__bubble--from-user) .webchat__bubble__content'
+      ).forEach(maybeAttachSaveBar);
+
+      const observer = new MutationObserver(mutations => {
+        for (const mutation of mutations) {
+          for (const node of mutation.addedNodes) {
+            if (node.nodeType !== Node.ELEMENT_NODE) continue;
+
+            // Check the node itself
+            if (node.matches?.('.webchat__bubble:not(.webchat__bubble--from-user) .webchat__bubble__content')) {
+              maybeAttachSaveBar(node);
+            }
+            // And any matching descendants
+            node.querySelectorAll?.(
+              '.webchat__bubble:not(.webchat__bubble--from-user) .webchat__bubble__content'
+            ).forEach(maybeAttachSaveBar);
           }
-        });
-      }, 1000);
+
+          // Bubbles may also get content added asynchronously (streamed),
+          // so re-check any modified bubble that already lost its attach flag check.
+          if (mutation.type === 'characterData' || mutation.type === 'childList') {
+            const target = mutation.target.closest?.('.webchat__bubble__content');
+            if (target && !target.classList.contains('webchat__bubble--from-user')) {
+              maybeAttachSaveBar(target);
+            }
+          }
+        }
+      });
+
+      observer.observe(transcript, {
+        childList: true,
+        subtree: true,
+        characterData: true
+      });
     }
 
     // ── Main init ──────────────────────────────────────────────────────────────
@@ -444,7 +516,7 @@
         const store = window.WebChat.createStore(
           {},
           ({ dispatch }) => next => action => {
-            // 1. On connection, kick off the conversation with a startConversation event.
+            // On connection, kick off the conversation with a startConversation event
             if (action.type === "DIRECT_LINE/CONNECT_FULFILLED") {
               dispatch({
                 type: "DIRECT_LINE/POST_ACTIVITY",
@@ -458,33 +530,6 @@
                 }
               });
             }
-
-            // 2. Watch for outgoing user messages that look like lesson requests.
-            //    If matched, schedule a Vera-styled acknowledgement bubble to
-            //    appear right after the user's message in the transcript.
-            if (
-              action.type === "DIRECT_LINE/POST_ACTIVITY" &&
-              action.payload &&
-              action.payload.activity &&
-              action.payload.activity.type === "message" &&
-              looksLikeLessonRequest(action.payload.activity.text)
-            ) {
-              setTimeout(() => {
-                dispatch({
-                  type: "DIRECT_LINE/INCOMING_ACTIVITY",
-                  payload: {
-                    activity: {
-                      type: "message",
-                      from: { id: "vera-ack", name: "Vera", role: "bot" },
-                      text: ACK_MESSAGE,
-                      timestamp: new Date().toISOString(),
-                      channelData: { veraAck: true }
-                    }
-                  }
-                });
-              }, 50);
-            }
-
             return next(action);
           }
         );
@@ -502,94 +547,8 @@
           document.getElementById("webchat")
         );
 
-        // Start watching for the PDF token
-        watchForPDFToken();
-
-        // Inject CSS to reduce internal whitespace after render
-        setTimeout(() => {
-          const style = document.createElement('style');
-          style.textContent = `
-            .webchat__basic-transcript__filler {
-              display: none !important;
-              flex: 0 !important;
-              min-height: 0 !important;
-            }
-            .webchat__basic-transcript {
-              padding-top: 0 !important;
-            }
-            .webchat__basic-transcript__activity {
-              padding-top: 4px !important;
-              padding-bottom: 4px !important;
-            }
-
-            /* Bubble content spacing */
-            .webchat__bubble__content p {
-              margin-bottom: 10px !important;
-              line-height: 1.6 !important;
-            }
-            .webchat__bubble__content p:last-child {
-              margin-bottom: 0 !important;
-            }
-            .webchat__bubble__content ul,
-            .webchat__bubble__content ol {
-              padding-left: 16px !important;
-              margin: 8px 0 !important;
-            }
-            .webchat__bubble__content li {
-              margin-bottom: 10px !important;
-              line-height: 1.6 !important;
-            }
-            .webchat__bubble__content li:last-child {
-              margin-bottom: 0 !important;
-            }
-            .webchat__bubble__content a {
-              color: #288835 !important;
-            }
-            .webchat__bubble__content a:hover {
-              color: #35AC46 !important;
-            }
-
-            /* Hide file upload/attachment button */
-            .webchat__upload-button {
-              display: none !important;
-            }
-
-            /* Constrain stacked buttons to content width */
-            .webchat__suggested-actions__stacked,
-            .webchat__suggested-actions {
-              align-items: flex-start !important;
-              padding: 0 12px !important;
-            }
-            .webchat__suggested-actions__stacked button,
-            .webchat__suggested-actions button {
-              width: auto !important;
-              min-width: 0 !important;
-            }
-            .webchat__suggested-actions__item-box {
-              width: auto !important;
-              flex: 0 0 auto !important;
-            }
-            .webchat__suggested-action {
-              width: auto !important;
-            }
-            /* Override SDK scoped styles forcing full width */
-            .webchat__suggested-actions__stack {
-              display: flex !important;
-              flex-direction: column !important;
-              align-items: flex-start !important;
-            }
-            .webchat__suggested-actions__stack .webchat__suggested-actions__item-box {
-              width: auto !important;
-              max-width: 100% !important;
-              flex: 0 0 auto !important;
-            }
-            .webchat__suggested-actions__stack button {
-              width: auto !important;
-              max-width: none !important;
-            }
-          `;
-          document.head.appendChild(style);
-        }, 500);
+        // Start watching the transcript for substantive bubbles
+        watchTranscript();
 
       } catch (err) {
         console.error("Vera failed to load:", err);
