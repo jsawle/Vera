@@ -330,12 +330,22 @@
       `;
     }
 
+    // Return the bubble's content HTML and text WITHOUT the injected save bar.
+    // We clone the node and strip the bar so exports never contain the buttons.
+    function getCleanContent(bubbleContent) {
+      const clone = bubbleContent.cloneNode(true);
+      clone.querySelectorAll('[data-vera-save-bar]').forEach(el => el.remove());
+      return {
+        html: clone.innerHTML,
+        text: clone.innerText || clone.textContent || ''
+      };
+    }
+
     // Copy the bubble's content to the clipboard as rich HTML so pasting into
     // Word, Google Docs, etc. preserves formatting. Plain text is included as
     // a fallback for plain-text-only destinations.
     async function copyBubbleHTML(bubbleContent, button) {
-      const html = bubbleContent.innerHTML;
-      const text = bubbleContent.innerText || bubbleContent.textContent || '';
+      const { html, text } = getCleanContent(bubbleContent);
 
       try {
         // Modern clipboard API supports rich HTML via ClipboardItem
@@ -382,7 +392,7 @@
 
     // Generate and download a .docx of the bubble content using html-docx-js.
     function downloadBubbleAsWord(bubbleContent) {
-      const bubbleHtml = bubbleContent.innerHTML;
+      const { html: bubbleHtml } = getCleanContent(bubbleContent);
 
       // Wrap in a minimal HTML document with basic styling so Word renders it sensibly
       const fullHtml = `
@@ -448,6 +458,10 @@
     function maybeAttachSaveBar(bubbleContentEl) {
       if (bubbleContentEl.dataset.veraSaveAttached) return;
 
+      // Never attach to user bubbles — check the ancestor bubble, since the
+      // from-user class lives on .webchat__bubble, not on the content element.
+      if (bubbleContentEl.closest('.webchat__bubble--from-user')) return;
+
       const text = bubbleContentEl.innerText || bubbleContentEl.textContent || '';
       if (text.trim().length < SAVE_THRESHOLD_CHARS) return;
 
@@ -482,10 +496,14 @@
           }
 
           // Bubbles may also get content added asynchronously (streamed),
-          // so re-check any modified bubble that already lost its attach flag check.
+          // so re-check any modified bubble. For characterData mutations the
+          // target is a Text node, so walk up via parentElement first.
           if (mutation.type === 'characterData' || mutation.type === 'childList') {
-            const target = mutation.target.closest?.('.webchat__bubble__content');
-            if (target && !target.classList.contains('webchat__bubble--from-user')) {
+            const base = mutation.target.nodeType === Node.ELEMENT_NODE
+              ? mutation.target
+              : mutation.target.parentElement;
+            const target = base?.closest?.('.webchat__bubble__content');
+            if (target) {
               maybeAttachSaveBar(target);
             }
           }
