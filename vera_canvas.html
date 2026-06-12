@@ -535,6 +535,24 @@
         const tokenData = await tokenResponse.json();
         const directLineURL = regionalData.channelUrlsById.directline;
 
+        // Strip Copilot Studio citation markup from bot messages before render.
+        // The platform appends inline [n] markers and reference-definition lines
+        // ([n]: cite:n "filename") to knowledge-grounded answers; teachers don't
+        // need internal filenames, and our instructions already suppress prose
+        // citations. Stripping here also keeps exports (Copy / Open in Word) clean.
+        function stripCitations(text) {
+          if (!text) return text;
+          return text
+            // reference-definition lines at message end: [1]: cite:1 "file.txt"
+            .replace(/^\[\d+\]:\s*cite:.*$/gm, '')
+            // inline numeric markers [1] [2] — but never markdown links [text](url)
+            .replace(/\[\d+\](?!\()/g, '')
+            // collapse whitespace left behind
+            .replace(/[ \t]+$/gm, '')
+            .replace(/\n{3,}/g, '\n\n')
+            .trim();
+        }
+
         const store = window.WebChat.createStore(
           {},
           ({ dispatch }) => next => action => {
@@ -551,6 +569,21 @@
                   }
                 }
               });
+            }
+            // Clean citations from incoming bot activities
+            if (action.type === "DIRECT_LINE/INCOMING_ACTIVITY") {
+              const activity = action.payload?.activity;
+              if (activity?.type === "message" && activity.from?.role !== "user") {
+                if (activity.text) {
+                  activity.text = stripCitations(activity.text);
+                }
+                // Remove citation entities so Web Chat renders no references block
+                if (Array.isArray(activity.entities)) {
+                  activity.entities = activity.entities.filter(
+                    e => !(e?.type && String(e.type).toLowerCase().includes('claim'))
+                  );
+                }
+              }
             }
             return next(action);
           }
