@@ -4,10 +4,11 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Vera — MapMaker Education Assistant</title>
-  <!-- WebChat pinned to a specific version for stability -->
-  <script src="https://cdn.botframework.com/botframework-webchat/4.18.0/webchat.js"></script>
-  <!-- html-docx-js for "Open in Word" -->
-  <script src="https://cdn.jsdelivr.net/npm/html-docx-js@0.3.1/dist/html-docx.js"></script>
+  <!-- WebChat 4.18.0 and html-docx-js 0.3.1 — self-hosted in /lib so no
+       third-party CDN executes code in this page. To update either library,
+       download the new version into /lib and bump the filename here. -->
+  <script src="./lib/webchat-4.18.0.js"></script>
+  <script src="./lib/html-docx-0.3.1.js"></script>
   <style>
     *, *::before, *::after {
       box-sizing: border-box;
