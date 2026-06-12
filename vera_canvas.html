@@ -109,6 +109,45 @@
       width: 100%;
     }
 
+    /* "Vera is thinking" indicator — shown between sending a message and
+       receiving the reply, so long generative responses have a clear signal */
+    .vera-thinking {
+      display: none;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 18px;
+      background: #f0f5f0;
+      border-top: 1px solid #BDF2C4;
+      flex-shrink: 0;
+      font-family: 'Georgia', serif;
+      color: #288835;
+      font-size: 14px;
+    }
+    .vera-thinking.is-active { display: flex; }
+    .vera-thinking__label {
+      font-style: italic;
+      animation: vera-pulse 1.6s ease-in-out infinite;
+    }
+    .vera-thinking__dots span {
+      display: inline-block;
+      width: 6px;
+      height: 6px;
+      margin-right: 4px;
+      border-radius: 50%;
+      background: #35AC46;
+      animation: vera-bounce 1.2s ease-in-out infinite;
+    }
+    .vera-thinking__dots span:nth-child(2) { animation-delay: 0.15s; }
+    .vera-thinking__dots span:nth-child(3) { animation-delay: 0.3s; }
+    @keyframes vera-pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.45; }
+    }
+    @keyframes vera-bounce {
+      0%, 100% { transform: translateY(0); opacity: 0.5; }
+      50% { transform: translateY(-4px); opacity: 1; }
+    }
+
     .loading {
       flex: 1;
       display: flex;
@@ -248,10 +287,14 @@
           <div class="header-ask">Ask Vera</div>
           <div class="header-name">&mdash; The Support Hub AI Education Assistant</div>
         </div>
-        <div class="header-tagline">Discover MapMaker maps, layers and lessons with Vera.</div>
+        <div class="header-tagline">Find the right maps and lessons &mdash; and create lesson plans, quizzes and rubrics for teaching with MapMaker.</div>
       </div>
     </div>
     <div id="webchat" role="main"></div>
+    <div id="vera-thinking" class="vera-thinking" role="status" aria-live="polite">
+      <span class="vera-thinking__label">Vera is thinking</span>
+      <span class="vera-thinking__dots"><span></span><span></span><span></span></span>
+    </div>
   </div>
 
   <script>
@@ -535,6 +578,31 @@
         const tokenData = await tokenResponse.json();
         const directLineURL = regionalData.channelUrlsById.directline;
 
+        // ── "Vera is thinking" indicator control ──
+        const thinkingEl = document.getElementById('vera-thinking');
+        const thinkingLabel = thinkingEl.querySelector('.vera-thinking__label');
+        let thinkingSlowTimer = null;
+        let thinkingFailsafe = null;
+
+        function showThinking() {
+          thinkingLabel.textContent = 'Vera is thinking';
+          thinkingEl.classList.add('is-active');
+          clearTimeout(thinkingSlowTimer);
+          clearTimeout(thinkingFailsafe);
+          // Longer waits get a reassuring message change
+          thinkingSlowTimer = setTimeout(() => {
+            thinkingLabel.textContent = 'Still working — building something detailed';
+          }, 18000);
+          // Failsafe: never leave the indicator stuck
+          thinkingFailsafe = setTimeout(hideThinking, 120000);
+        }
+
+        function hideThinking() {
+          thinkingEl.classList.remove('is-active');
+          clearTimeout(thinkingSlowTimer);
+          clearTimeout(thinkingFailsafe);
+        }
+
         // Strip Copilot Studio citation markup from bot messages before render.
         // The platform appends inline [n] markers and reference-definition lines
         // ([n]: cite:n "filename") to knowledge-grounded answers; teachers don't
@@ -570,10 +638,17 @@
                 }
               });
             }
+            // Thinking indicator: on when the user sends a message...
+            if (action.type === "DIRECT_LINE/POST_ACTIVITY" &&
+                action.payload?.activity?.type === "message") {
+              showThinking();
+            }
             // Clean citations from incoming bot activities
             if (action.type === "DIRECT_LINE/INCOMING_ACTIVITY") {
               const activity = action.payload?.activity;
               if (activity?.type === "message" && activity.from?.role !== "user") {
+                // ...and off when the bot's reply arrives
+                hideThinking();
                 if (activity.text) {
                   activity.text = stripCitations(activity.text);
                 }
