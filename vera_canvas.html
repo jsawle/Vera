@@ -124,6 +124,18 @@
       font-size: 14px;
     }
     .vera-thinking.is-active { display: flex; }
+
+    /* Privacy notice — always visible under the send box */
+    .privacy-note {
+      flex-shrink: 0;
+      padding: 6px 18px 7px;
+      background: #f0f5f0;
+      border-top: 1px solid #BDF2C4;
+      font-family: 'Georgia', serif;
+      font-size: 12px;
+      line-height: 1.45;
+      color: #4a5a4a;
+    }
     .vera-thinking__label {
       font-style: italic;
       animation: vera-pulse 1.6s ease-in-out infinite;
@@ -294,6 +306,9 @@
     <div id="vera-thinking" class="vera-thinking" role="status" aria-live="polite">
       <span class="vera-thinking__label">Vera is thinking</span>
       <span class="vera-thinking__dots"><span></span><span></span><span></span></span>
+    </div>
+    <div class="privacy-note" role="note">
+      Please don&rsquo;t enter names or other personal information. Your questions and Vera&rsquo;s answers are stored for up to 30 days and reviewed only to improve Vera&rsquo;s responses.
     </div>
   </div>
 
