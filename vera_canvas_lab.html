@@ -1,0 +1,806 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Vera (lab) — MapMaker Education Assistant</title>
+  <!-- WebChat 4.18.0 and html-docx-js 0.3.1 — self-hosted in /lib so no
+       third-party CDN executes code in this page. To update either library,
+       download the new version into /lib and bump the filename here. -->
+  <script src="./lib/webchat-4.18.0.js"></script>
+  <script src="./lib/html-docx-0.3.1.js"></script>
+  <style>
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html, body {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background: #f7f8f4;
+      font-family: 'Georgia', serif;
+    }
+
+    .wrapper {
+      display: flex;
+      flex-direction: column;
+      width: 100%;
+      height: 100vh;
+      border: 1px solid #6BC878;
+      border-radius: 6px;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.12);
+      overflow: hidden;
+    }
+
+    /* Soft green top stripe */
+    .top-stripe {
+      background: #35AC46;
+      height: 4px;
+      width: 100%;
+      flex-shrink: 0;
+    }
+
+    /* Subtle header */
+    .header {
+      background: #f0f5f0;
+      padding: 12px 18px;
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      flex-shrink: 0;
+      border-bottom: 1px solid #6BC878;
+    }
+
+    .header-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #35AC46;
+      flex-shrink: 0;
+      margin-top: 5px;
+    }
+
+    .header-top-row {
+      display: flex;
+      align-items: baseline;
+      gap: 8px;
+    }
+
+    .header-text {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .header-ask {
+      color: #288835;
+      font-family: 'Georgia', serif;
+      font-size: 20px;
+      font-style: italic;
+      font-weight: bold;
+    }
+
+    .header-name {
+      color: #1f6b2a; /* LAB: was #288835, below 4.5:1 on the header */
+      font-family: 'Georgia', serif;
+      font-size: 20px;
+      font-style: normal;
+      font-weight: normal;
+      letter-spacing: 0.4px;
+      line-height: 1.5;
+    }
+
+    .header-tagline {
+      color: #1f6b2a; /* LAB: was #35AC46, below 4.5:1 on the header */
+      font-family: 'Georgia', serif;
+      font-size: 14px;
+      font-style: normal;
+      font-weight: normal;
+      letter-spacing: 0.4px;
+      padding-left: 0;
+    }
+
+    #webchat {
+      flex: 1;
+      min-height: 0;
+      width: 100%;
+    }
+
+    /* "Vera is thinking" indicator — shown between sending a message and
+       receiving the reply, so long generative responses have a clear signal */
+    .vera-thinking {
+      display: none;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 18px;
+      background: #f0f5f0;
+      border-top: 1px solid #BDF2C4;
+      flex-shrink: 0;
+      font-family: 'Georgia', serif;
+      color: #288835;
+      font-size: 14px;
+    }
+    .vera-thinking.is-active { display: flex; }
+
+    /* Privacy notice — always visible under the send box */
+    .privacy-note {
+      flex-shrink: 0;
+      padding: 6px 18px 7px;
+      background: #f0f5f0;
+      border-top: 1px solid #BDF2C4;
+      font-family: 'Georgia', serif;
+      font-size: 12px;
+      line-height: 1.45;
+      color: #4a5a4a;
+    }
+    .vera-thinking__label {
+      font-style: italic;
+      animation: vera-pulse 1.6s ease-in-out infinite;
+    }
+    .vera-thinking__dots span {
+      display: inline-block;
+      width: 6px;
+      height: 6px;
+      margin-right: 4px;
+      border-radius: 50%;
+      background: #35AC46;
+      animation: vera-bounce 1.2s ease-in-out infinite;
+    }
+    .vera-thinking__dots span:nth-child(2) { animation-delay: 0.15s; }
+    .vera-thinking__dots span:nth-child(3) { animation-delay: 0.3s; }
+    @keyframes vera-pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.45; }
+    }
+    @keyframes vera-bounce {
+      0%, 100% { transform: translateY(0); opacity: 0.5; }
+      50% { transform: translateY(-4px); opacity: 1; }
+    }
+
+    /* LAB: lesson hand-off banner, footer row, credit and versions */
+    .vera-lesson {
+      flex-shrink: 0;
+      padding: 8px 18px;
+      background: #ffffff;
+      border-bottom: 1px solid #BDF2C4;
+      font-family: 'Georgia', serif;
+      font-size: 14px;
+      line-height: 1.45;
+      color: #2a2a2a;
+    }
+    .vera-lesson[hidden] { display: none; }
+    .vera-lesson strong { color: #1f6b2a; }
+    .lab-tag {
+      display: inline-block;
+      margin-left: 6px;
+      padding: 0 6px;
+      border: 1px solid #288835;
+      border-radius: 4px;
+      font-size: 12px;
+      color: #1f6b2a;
+      vertical-align: middle;
+    }
+    .foot-row {
+      flex-shrink: 0;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 6px 12px;
+      padding: 0 18px 8px;
+      background: #f0f5f0;
+      font-family: 'Georgia', serif;
+      font-size: 12px;
+      color: #4a5a4a;
+    }
+    .foot-row details summary { cursor: pointer; color: #1f6b2a; }
+    .foot-row table { border-collapse: collapse; margin-top: 4px; }
+    .foot-row th, .foot-row td { text-align: left; padding: 1px 10px 1px 0; font-weight: normal; }
+    .foot-row th { color: #2a2a2a; }
+    .credit {
+      margin-left: auto;
+      background: #000;
+      color: #fff;
+      border-top: 3px solid #FFCC00;
+      padding: 4px 8px;
+      border-radius: 4px;
+      font-family: Arial, sans-serif;
+      font-size: 12px;
+      line-height: 1.35;
+    }
+    :focus-visible { outline: 3px solid #0b5fff; outline-offset: 2px; }
+
+    .loading {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #888;
+      font-family: 'Georgia', serif;
+      font-size: 13px;
+      background: #f7f8f4;
+    }
+
+    /* Save buttons — Pattern A: appear inline below each substantive bubble */
+    .vera-save-bar {
+  display: flex;
+  gap: 8px;
+  margin-top: 12px;
+  margin-bottom: 4px;
+  margin-left: 8px;
+  padding-left: 0;
+}
+
+    .vera-save-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 14px;
+      background: transparent;
+      color: #288835;
+      border: 1px solid #35AC46;
+      border-radius: 16px;
+      font-family: 'Georgia', serif;
+      font-size: 13px;
+      cursor: pointer;
+      transition: background 0.18s ease, color 0.18s ease;
+    }
+
+    .vera-save-btn:hover {
+      background: #35AC46;
+      color: #ffffff;
+    }
+
+    .vera-save-btn svg {
+      flex-shrink: 0;
+    }
+
+    .vera-save-btn.is-copied {
+      background: #35AC46;
+      color: #ffffff;
+    }
+
+    /* WebChat content overrides — injected here rather than via setTimeout
+       to avoid flash of unstyled content */
+    .webchat__basic-transcript__filler {
+      display: none !important;
+      flex: 0 !important;
+      min-height: 0 !important;
+    }
+    .webchat__basic-transcript {
+      padding-top: 0 !important;
+    }
+    .webchat__basic-transcript__activity {
+      padding-top: 4px !important;
+      padding-bottom: 4px !important;
+    }
+    .webchat__bubble__content p {
+      margin-bottom: 10px !important;
+      line-height: 1.6 !important;
+    }
+    .webchat__bubble__content p:last-child {
+      margin-bottom: 0 !important;
+    }
+    .webchat__bubble__content ul,
+    .webchat__bubble__content ol {
+      padding-left: 16px !important;
+      margin: 8px 0 !important;
+    }
+    .webchat__bubble__content li {
+      margin-bottom: 10px !important;
+      line-height: 1.6 !important;
+    }
+    .webchat__bubble__content li:last-child {
+      margin-bottom: 0 !important;
+    }
+    .webchat__bubble__content a {
+      color: #288835 !important;
+    }
+    .webchat__bubble__content a:hover {
+      color: #35AC46 !important;
+    }
+
+    /* Hide file upload/attachment button */
+    .webchat__upload-button {
+      display: none !important;
+    }
+
+    /* Constrain stacked suggested-action buttons to content width */
+    .webchat__suggested-actions__stacked,
+    .webchat__suggested-actions {
+      align-items: flex-start !important;
+      padding: 0 12px !important;
+    }
+    .webchat__suggested-actions__stacked button,
+    .webchat__suggested-actions button {
+      width: auto !important;
+      min-width: 0 !important;
+    }
+    .webchat__suggested-actions__item-box {
+      width: auto !important;
+      flex: 0 0 auto !important;
+    }
+    .webchat__suggested-action {
+      width: auto !important;
+    }
+    .webchat__suggested-actions__stack {
+      display: flex !important;
+      flex-direction: column !important;
+      align-items: flex-start !important;
+    }
+    .webchat__suggested-actions__stack .webchat__suggested-actions__item-box {
+      width: auto !important;
+      max-width: 100% !important;
+      flex: 0 0 auto !important;
+    }
+    .webchat__suggested-actions__stack button {
+      width: auto !important;
+      max-width: none !important;
+    }
+  </style>
+</head>
+<body>
+  <div class="wrapper">
+    <div class="top-stripe"></div>
+    <div class="header">
+      <div class="header-dot"></div>
+      <div class="header-text">
+        <div class="header-top-row">
+          <div class="header-ask">Ask Vera</div>
+          <div class="header-name">&mdash; The Support Hub AI Education Assistant <span class="lab-tag">Lab</span></div>
+        </div>
+        <div class="header-tagline">Find maps and lessons, create lesson plans and assessments &mdash; everything you need to teach with MapMaker.</div>
+      </div>
+    </div>
+    <div id="vera-lesson" class="vera-lesson" hidden></div>
+    <div id="webchat" role="main"></div>
+    <div id="vera-thinking" class="vera-thinking" role="status" aria-live="polite">
+      <span class="vera-thinking__label">Vera is thinking</span>
+      <span class="vera-thinking__dots"><span></span><span></span><span></span></span>
+    </div>
+    <div class="privacy-note" role="note">
+      Please don&rsquo;t enter names or other personal information. Your questions and Vera&rsquo;s answers are stored for up to 30 days and reviewed only to improve Vera&rsquo;s responses.
+    </div>
+    <div class="foot-row">
+      <details>
+        <summary>About this page</summary>
+        <table>
+          <caption style="position:absolute;left:-9999px">Versions</caption>
+          <tr><th scope="row">Vera chat page (lab)</th><td>0.1.0</td></tr>
+          <tr><th scope="row">Lesson hand-off</th><td>1.0</td></tr>
+          <tr><th scope="row">Web Chat</th><td>4.18.0</td></tr>
+          <tr><th scope="row">html-docx</th><td>0.3.1</td></tr>
+        </table>
+      </details>
+      <div class="credit">Created by Jason Sawle</div>
+    </div>
+  </div>
+
+  <script>
+    // ── LAB: lesson hand-off v1.0 ─────────────────────────────────────────────
+    // A Support Hub lesson page links here as ?lesson=<id>&title=<title>. Vera's
+    // knowledge file has an entry per lesson keyed by title and lesson ID, so we
+    // put both in the message box. The teacher adds what they want and sends it;
+    // nothing is sent automatically. Only plain text is used, never HTML.
+    function lessonFromUrl() {
+      const p = new URLSearchParams(window.location.search);
+      const id = (p.get('lesson') || '').trim();
+      if (!/^[a-z0-9]+(-[a-z0-9]+)*$/.test(id) || id.length > 80) return null;
+      const title = (p.get('title') || '').replace(/[\u0000-\u001f\u007f]/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 120);
+      return { id, title: title || id };
+    }
+    function lessonMessage(lesson) {
+      return `I'm using the MapMaker lesson "${lesson.title}" (lesson ID ${lesson.id}). Please make different questions for it: `;
+    }
+    function showLessonBanner(lesson) {
+      const el = document.getElementById('vera-lesson');
+      const strong = document.createElement('strong');
+      strong.textContent = `Lesson: ${lesson.title}. `;
+      el.replaceChildren(strong, document.createTextNode(
+        'Add what you need to the message below, such as an easier version, a short quiz or questions for your state standards, then send it.'));
+      el.hidden = false;
+    }
+    const handoffLesson = lessonFromUrl();
+    if (handoffLesson) showLessonBanner(handoffLesson);
+
+    const tokenEndpoint = "https://68c61fd12475ebdd804374cf052e0d.0e.environment.api.powerplatform.com/powervirtualagents/botsbyschema/cr86a_Vera/directline/token?api-version=2022-03-01-preview";
+
+    // Substantive content threshold. Bubbles with at least this many characters
+    // of text are considered "savable" — long enough to be a lesson plan,
+    // assessment, or other deliverable rather than a conversational reply.
+    const SAVE_THRESHOLD_CHARS = 300;
+
+    const styleOptions = {
+      "accent": "#35AC46",
+      "backgroundColor": "#f7f8f4",
+      "bubbleBackground": "#ffffff",
+      "bubbleBorderColor": "#6BC878",
+      "bubbleBorderRadius": 8,
+      "bubbleBorderStyle": "solid",
+      "bubbleBorderWidth": 1,
+      "bubbleTextColor": "#2a2a2a",
+      "bubbleNubSize": 0,
+      "bubbleMaxWidth": 520,
+      "bubbleFromUserBackground": "#35AC46",
+      "bubbleFromUserBorderColor": "#288835",
+      "bubbleFromUserBorderRadius": 8,
+      "bubbleFromUserBorderStyle": "solid",
+      "bubbleFromUserBorderWidth": 1,
+      "bubbleFromUserTextColor": "#ffffff",
+      "bubbleFromUserNubSize": 0,
+      "botAvatarBackgroundColor": "#35AC46",
+      "botAvatarInitials": "V",
+      "showAvatarInGroup": "status",
+      "avatarSize": 30,
+      "avatarBorderRadius": "50%",
+      "userAvatarBackgroundColor": "#35AC46",
+      "userAvatarInitials": "",
+      "sendBoxBackground": "#f0f5f0",
+      "sendBoxBorderTop": "solid 1px #6BC878",
+      "sendBoxButtonColor": "#288835",
+      "sendBoxButtonColorOnHover": "#35AC46",
+      "sendBoxHeight": 50,
+      "sendBoxTextColor": "#2a2a2a",
+      "sendBoxPlaceholderColor": "#6BC878",
+      "suggestedActionBackground": "#ffffff",
+      "suggestedActionBorderColor": "#35AC46",
+      "suggestedActionBorderRadius": 20,
+      "suggestedActionBorderWidth": 1,
+      "suggestedActionTextColor": "#288835",
+      "suggestedActionBackgroundColorOnHover": "#BDF2C4",
+      "suggestedActionLayout": "stacked",
+      "suggestedActionsStackedLayoutButtonTextWrap": true,
+      "primaryFont": "Georgia, serif",
+      "monospaceFont": "Consolas, monospace",
+      "paddingRegular": 12,
+      "paddingWide": 16,
+      "subtleColor": "#6BC878",
+    };
+
+    // ── Save helpers ───────────────────────────────────────────────────────────
+
+    function copyIcon() {
+      return `
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+          <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+        </svg>
+      `;
+    }
+
+    function wordIcon() {
+      return `
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+          <polyline points="14 2 14 8 20 8"></polyline>
+          <line x1="16" y1="13" x2="8" y2="13"></line>
+          <line x1="16" y1="17" x2="8" y2="17"></line>
+        </svg>
+      `;
+    }
+
+    // Return the bubble's content HTML and text WITHOUT the injected save bar.
+    // We clone the node and strip the bar so exports never contain the buttons.
+    function getCleanContent(bubbleContent) {
+      const clone = bubbleContent.cloneNode(true);
+      clone.querySelectorAll('[data-vera-save-bar]').forEach(el => el.remove());
+      return {
+        html: clone.innerHTML,
+        text: clone.innerText || clone.textContent || ''
+      };
+    }
+
+    // Copy the bubble's content to the clipboard as rich HTML so pasting into
+    // Word, Google Docs, etc. preserves formatting. Plain text is included as
+    // a fallback for plain-text-only destinations.
+    async function copyBubbleHTML(bubbleContent, button) {
+      const { html, text } = getCleanContent(bubbleContent);
+
+      try {
+        // Modern clipboard API supports rich HTML via ClipboardItem
+        if (navigator.clipboard && window.ClipboardItem) {
+          await navigator.clipboard.write([
+            new ClipboardItem({
+              'text/html': new Blob([html], { type: 'text/html' }),
+              'text/plain': new Blob([text], { type: 'text/plain' })
+            })
+          ]);
+        } else {
+          // Fallback: text-only copy via legacy API
+          await navigator.clipboard.writeText(text);
+        }
+        showCopiedFeedback(button);
+      } catch (err) {
+        console.error('Copy failed:', err);
+        // Last-resort fallback: text-only via deprecated execCommand
+        try {
+          const textarea = document.createElement('textarea');
+          textarea.value = text;
+          textarea.style.position = 'fixed';
+          textarea.style.opacity = '0';
+          document.body.appendChild(textarea);
+          textarea.select();
+          document.execCommand('copy');
+          document.body.removeChild(textarea);
+          showCopiedFeedback(button);
+        } catch (fallbackErr) {
+          console.error('Fallback copy also failed:', fallbackErr);
+        }
+      }
+    }
+
+    function showCopiedFeedback(button) {
+      const originalHTML = button.innerHTML;
+      button.classList.add('is-copied');
+      button.innerHTML = `${copyIcon()} Copied`;
+      setTimeout(() => {
+        button.classList.remove('is-copied');
+        button.innerHTML = originalHTML;
+      }, 1600);
+    }
+
+    // Generate and download a .docx of the bubble content using html-docx-js.
+    function downloadBubbleAsWord(bubbleContent) {
+      const { html: bubbleHtml } = getCleanContent(bubbleContent);
+
+      // Wrap in a minimal HTML document with basic styling so Word renders it sensibly
+      const fullHtml = `
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <meta charset="UTF-8">
+          <style>
+            body { font-family: Georgia, serif; font-size: 12pt; line-height: 1.6; color: #1a1a1a; }
+            h1, h2, h3 { color: #288835; margin-top: 16pt; margin-bottom: 6pt; }
+            ul, ol { padding-left: 20pt; margin: 6pt 0; }
+            li { margin-bottom: 4pt; }
+            a { color: #288835; }
+            p { margin-bottom: 8pt; }
+          </style>
+        </head>
+        <body>${bubbleHtml}</body>
+        </html>
+      `;
+
+      try {
+        const converted = htmlDocx.asBlob(fullHtml);
+        const filename = `vera-output-${new Date().toISOString().slice(0, 10)}.docx`;
+
+        // Trigger download
+        const url = URL.createObjectURL(converted);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = filename;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+      } catch (err) {
+        console.error('Word export failed:', err);
+        alert('Sorry, the document could not be generated. Please try Copy instead.');
+      }
+    }
+
+    function buildSaveBar(bubbleContent) {
+      const bar = document.createElement('div');
+      bar.className = 'vera-save-bar';
+      bar.setAttribute('data-vera-save-bar', '');
+
+      const copyBtn = document.createElement('button');
+      copyBtn.type = 'button';
+      copyBtn.className = 'vera-save-btn';
+      copyBtn.innerHTML = `${copyIcon()} Copy`;
+      copyBtn.addEventListener('click', () => copyBubbleHTML(bubbleContent, copyBtn));
+
+      const wordBtn = document.createElement('button');
+      wordBtn.type = 'button';
+      wordBtn.className = 'vera-save-btn';
+      wordBtn.innerHTML = `${wordIcon()} Open in Word`;
+      wordBtn.addEventListener('click', () => downloadBubbleAsWord(bubbleContent));
+
+      bar.appendChild(copyBtn);
+      bar.appendChild(wordBtn);
+      return bar;
+    }
+
+    // Attach save bar to a bubble's content element if substantive and not already attached.
+    function maybeAttachSaveBar(bubbleContentEl) {
+      if (bubbleContentEl.dataset.veraSaveAttached) return;
+
+      // Never attach to user bubbles — check the ancestor bubble, since the
+      // from-user class lives on .webchat__bubble, not on the content element.
+      if (bubbleContentEl.closest('.webchat__bubble--from-user')) return;
+
+      const text = bubbleContentEl.innerText || bubbleContentEl.textContent || '';
+      if (text.trim().length < SAVE_THRESHOLD_CHARS) return;
+
+      bubbleContentEl.dataset.veraSaveAttached = 'true';
+      const bar = buildSaveBar(bubbleContentEl);
+      bubbleContentEl.appendChild(bar);
+    }
+
+    // Watch the transcript for new substantive bot bubbles and attach save bars.
+    // Uses MutationObserver — only fires when DOM changes, not on a polling loop.
+    function watchTranscript() {
+      const transcript = document.querySelector('.webchat__basic-transcript') || document.body;
+
+      // Initial sweep — handle any bubbles already in DOM
+      document.querySelectorAll(
+        '.webchat__bubble:not(.webchat__bubble--from-user) .webchat__bubble__content'
+      ).forEach(maybeAttachSaveBar);
+
+      const observer = new MutationObserver(mutations => {
+        for (const mutation of mutations) {
+          for (const node of mutation.addedNodes) {
+            if (node.nodeType !== Node.ELEMENT_NODE) continue;
+
+            // Check the node itself
+            if (node.matches?.('.webchat__bubble:not(.webchat__bubble--from-user) .webchat__bubble__content')) {
+              maybeAttachSaveBar(node);
+            }
+            // And any matching descendants
+            node.querySelectorAll?.(
+              '.webchat__bubble:not(.webchat__bubble--from-user) .webchat__bubble__content'
+            ).forEach(maybeAttachSaveBar);
+          }
+
+          // Bubbles may also get content added asynchronously (streamed),
+          // so re-check any modified bubble. For characterData mutations the
+          // target is a Text node, so walk up via parentElement first.
+          if (mutation.type === 'characterData' || mutation.type === 'childList') {
+            const base = mutation.target.nodeType === Node.ELEMENT_NODE
+              ? mutation.target
+              : mutation.target.parentElement;
+            const target = base?.closest?.('.webchat__bubble__content');
+            if (target) {
+              maybeAttachSaveBar(target);
+            }
+          }
+        }
+      });
+
+      observer.observe(transcript, {
+        childList: true,
+        subtree: true,
+        characterData: true
+      });
+    }
+
+    // ── Main init ──────────────────────────────────────────────────────────────
+
+    async function initChat() {
+      try {
+        const environmentEndPoint = tokenEndpoint.slice(0, tokenEndpoint.indexOf("/powervirtualagents"));
+        const apiVersion = tokenEndpoint.slice(tokenEndpoint.indexOf("api-version")).split("=")[1];
+        const regionalChannelSettingsURL = `${environmentEndPoint}/powervirtualagents/regionalchannelsettings?api-version=${apiVersion}`;
+
+        const [regionalResponse, tokenResponse] = await Promise.all([
+          fetch(regionalChannelSettingsURL),
+          fetch(tokenEndpoint)
+        ]);
+
+        const regionalData = await regionalResponse.json();
+        const tokenData = await tokenResponse.json();
+        const directLineURL = regionalData.channelUrlsById.directline;
+
+        // ── "Vera is thinking" indicator control ──
+        const thinkingEl = document.getElementById('vera-thinking');
+        const thinkingLabel = thinkingEl.querySelector('.vera-thinking__label');
+        let thinkingSlowTimer = null;
+        let thinkingFailsafe = null;
+
+        function showThinking() {
+          thinkingLabel.textContent = 'Vera is thinking';
+          thinkingEl.classList.add('is-active');
+          clearTimeout(thinkingSlowTimer);
+          clearTimeout(thinkingFailsafe);
+          // Longer waits get a reassuring message change
+          thinkingSlowTimer = setTimeout(() => {
+            thinkingLabel.textContent = 'Still working — building something detailed';
+          }, 18000);
+          // Failsafe: never leave the indicator stuck
+          thinkingFailsafe = setTimeout(hideThinking, 120000);
+        }
+
+        function hideThinking() {
+          thinkingEl.classList.remove('is-active');
+          clearTimeout(thinkingSlowTimer);
+          clearTimeout(thinkingFailsafe);
+        }
+
+        // Strip Copilot Studio citation markup from bot messages before render.
+        // The platform appends inline [n] markers and reference-definition lines
+        // ([n]: cite:n "filename") to knowledge-grounded answers; teachers don't
+        // need internal filenames, and our instructions already suppress prose
+        // citations. Stripping here also keeps exports (Copy / Open in Word) clean.
+        function stripCitations(text) {
+          if (!text) return text;
+          return text
+            // reference-definition lines at message end: [1]: cite:1 "file.txt"
+            .replace(/^\[\d+\]:\s*cite:.*$/gm, '')
+            // inline numeric markers [1] [2] — but never markdown links [text](url)
+            .replace(/\[\d+\](?!\()/g, '')
+            // collapse whitespace left behind
+            .replace(/[ \t]+$/gm, '')
+            .replace(/\n{3,}/g, '\n\n')
+            .trim();
+        }
+
+        const store = window.WebChat.createStore(
+          {},
+          ({ dispatch }) => next => action => {
+            // On connection, kick off the conversation with a startConversation event
+            if (action.type === "DIRECT_LINE/CONNECT_FULFILLED") {
+              dispatch({
+                type: "DIRECT_LINE/POST_ACTIVITY",
+                meta: { method: "keyboard" },
+                payload: {
+                  activity: {
+                    channelData: { postBack: true },
+                    name: "startConversation",
+                    type: "event"
+                  }
+                }
+              });
+            }
+            // Thinking indicator: on when the user sends a message...
+            if (action.type === "DIRECT_LINE/POST_ACTIVITY" &&
+                action.payload?.activity?.type === "message") {
+              showThinking();
+            }
+            // Clean citations from incoming bot activities
+            if (action.type === "DIRECT_LINE/INCOMING_ACTIVITY") {
+              const activity = action.payload?.activity;
+              if (activity?.type === "message" && activity.from?.role !== "user") {
+                // ...and off when the bot's reply arrives
+                hideThinking();
+                if (activity.text) {
+                  activity.text = stripCitations(activity.text);
+                }
+                // Remove citation entities so Web Chat renders no references block
+                if (Array.isArray(activity.entities)) {
+                  activity.entities = activity.entities.filter(
+                    e => !(e?.type && String(e.type).toLowerCase().includes('claim'))
+                  );
+                }
+              }
+            }
+            return next(action);
+          }
+        );
+
+        window.WebChat.renderWebChat(
+          {
+            directLine: window.WebChat.createDirectLine({
+              domain: `${directLineURL}v3/directline`,
+              token: tokenData.token,
+            }),
+            styleOptions,
+            store,
+            locale: "en-US",
+          },
+          document.getElementById("webchat")
+        );
+
+        // LAB: put the lesson in the message box for the teacher to finish.
+        if (handoffLesson) {
+          store.dispatch({ type: "WEB_CHAT/SET_SEND_BOX", payload: { text: lessonMessage(handoffLesson) } });
+        }
+
+        // Start watching the transcript for substantive bubbles
+        watchTranscript();
+
+      } catch (err) {
+        console.error("Vera failed to load:", err);
+        document.getElementById("webchat").innerHTML =
+          '<div class="loading">Unable to load. Please refresh the page.</div>';
+      }
+    }
+
+    initChat();
+  </script>
+</body>
+</html>
