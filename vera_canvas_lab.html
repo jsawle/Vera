@@ -8,8 +8,9 @@
        third-party CDN executes code in this page. To update either library,
        download the new version into /lib and bump the filename here. -->
   <script>
-    // LAB: embed mode v1.0. ?embed=1 is for a page that shows Vera inside its own section
-    // (a Support Hub lesson page), which already has a heading, so Vera's header is hidden.
+    // LAB: embed mode v1.1. ?embed=1 is for a page that shows Vera inside its own section (a Support Hub
+    // lesson page). That page explains that the lesson is already in the message box, so the lesson
+    // banner is left out and Vera's own title stays at the top.
     if (/[?&]embed=1(&|$)/.test(window.location.search)) document.documentElement.classList.add('is-embed');
   </script>
   <script src="./lib/webchat-4.18.0.js"></script>
@@ -165,7 +166,7 @@
       50% { transform: translateY(-4px); opacity: 1; }
     }
 
-    /* LAB: lesson hand-off banner, footer row, credit and versions */
+    /* LAB: lesson hand-off banner, footer row and versions */
     .vera-lesson {
       flex-shrink: 0;
       padding: 8px 18px;
@@ -205,22 +206,9 @@
     .foot-row table { border-collapse: collapse; margin-top: 4px; }
     .foot-row th, .foot-row td { text-align: left; padding: 1px 10px 1px 0; font-weight: normal; }
     .foot-row th { color: #2a2a2a; }
-    .credit {
-      margin-left: auto;
-      background: #000;
-      color: #fff;
-      border-top: 3px solid #FFCC00;
-      padding: 4px 8px;
-      border-radius: 4px;
-      font-family: Arial, sans-serif;
-      font-size: 12px;
-      line-height: 1.35;
-    }
     :focus-visible { outline: 3px solid #0b5fff; outline-offset: 2px; }
 
-    /* LAB: embed mode — no page header; the host page's section heading names Vera */
-    .is-embed .top-stripe,
-    .is-embed .header { display: none; }
+    /* LAB: embed mode — Vera's own title at the top, no lesson banner (see the script in <head>) */
     .is-embed .wrapper { box-shadow: none; }
 
     .loading {
@@ -379,14 +367,13 @@
         <summary>About this page</summary>
         <table>
           <caption style="position:absolute;left:-9999px">Versions</caption>
-          <tr><th scope="row">Vera chat page (lab)</th><td>0.2.0</td></tr>
+          <tr><th scope="row">Vera chat page (lab)</th><td>0.3.0</td></tr>
           <tr><th scope="row">Lesson hand-off</th><td>1.0</td></tr>
-          <tr><th scope="row">Embed mode</th><td>1.0</td></tr>
+          <tr><th scope="row">Embed mode</th><td>1.1</td></tr>
           <tr><th scope="row">Web Chat</th><td>4.18.0</td></tr>
           <tr><th scope="row">html-docx</th><td>0.3.1</td></tr>
         </table>
       </details>
-      <div class="credit">Created by Jason Sawle</div>
     </div>
   </div>
 
@@ -415,7 +402,8 @@
       el.hidden = false;
     }
     const handoffLesson = lessonFromUrl();
-    if (handoffLesson) showLessonBanner(handoffLesson);
+    // In embed mode the host page explains the hand-off, so only the message box carries the lesson.
+    if (handoffLesson && !document.documentElement.classList.contains('is-embed')) showLessonBanner(handoffLesson);
 
     const tokenEndpoint = "https://68c61fd12475ebdd804374cf052e0d.0e.environment.api.powerplatform.com/powervirtualagents/botsbyschema/cr86a_Vera/directline/token?api-version=2022-03-01-preview";
 
